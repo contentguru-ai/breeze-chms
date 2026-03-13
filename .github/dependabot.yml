@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # Keep npm dependencies up to date
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Batch all TypeScript toolchain updates together
+      typescript-toolchain:
+        patterns:
+          - "typescript"
+          - "@tsconfig/*"
+          - "ts-jest"
+          - "@types/*"
+      # Batch all Jest-related updates together
+      jest:
+        patterns:
+          - "jest"
+          - "jest-*"
+          - "@jest/*"
+    ignore:
+      # Ignore major-version bumps for test helpers; review manually
+      - dependency-name: "jest-to-match-shape-of"
+        update-types: ["version-update:semver-major"]
+
+  # Keep GitHub Actions up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5

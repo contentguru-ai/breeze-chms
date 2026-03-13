@@ -1,6 +1,9 @@
-import Axios from 'axios';
 import People from './people.js';
 import Account from './account.js';
+import { BreezeHttpClient } from './client.js';
+
+/** Valid Breeze subdomain: alphanumeric labels separated by hyphens (no leading/trailing hyphens). */
+const SUBDOMAIN_RE = /^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
 
 export default class Breeze {
   /**
@@ -18,15 +21,20 @@ export default class Breeze {
    * (_You can find this on the `Extensions` page of your Breeze account:
    * `https://YOURSUBDOMAIN.breezechms.com/extensions/api`_)
    *
-   * @returns Instace of callable Breeze API wrapper.
+   * @returns Instance of callable Breeze API wrapper.
    */
   constructor(subdomain: string, key: string) {
-    const api = Axios.create({
-      baseURL: `https://${subdomain}.breezechms.com/api/`,
-      headers: { 'Api-Key': key },
-    });
-    this.people = new People(api);
-    this.account = new Account(api);
+    if (!subdomain || !SUBDOMAIN_RE.test(subdomain)) {
+      throw new Error(
+        'Invalid subdomain: must contain only alphanumeric characters and hyphens.',
+      );
+    }
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid API key: must be a non-empty string.');
+    }
+    const client = new BreezeHttpClient(`https://${subdomain}.breezechms.com/api/`, key);
+    this.people = new People(client);
+    this.account = new Account(client);
   }
 
   /** List, get, add, update, and delete people in Breeze.

@@ -12,7 +12,12 @@ test("Throws 'Permission Denied' Error", async () => {
 });
 
 // Test config
-const breeze = new Breeze(process.env.subdomain as string, process.env.key as string);
+let breeze: Breeze;
+beforeAll(() => {
+  if (process.env.subdomain && process.env.key) {
+    breeze = new Breeze(process.env.subdomain, process.env.key);
+  }
+});
 let PERSON_ID = '';
 const ADD_PARAMS: AddParams = {
   name: { first: 'William', last: 'Frost', nick: 'Bill', middle: 'Matthew' },

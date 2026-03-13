@@ -12,7 +12,12 @@ test("Throws 'Permission Denied' Error", async () => {
 });
 
 // Test config
-const breeze = new Breeze(process.env.subdomain as string, process.env.key as string);
+let breeze: Breeze;
+beforeAll(() => {
+  if (process.env.subdomain && process.env.key) {
+    breeze = new Breeze(process.env.subdomain, process.env.key);
+  }
+});
 const ACCOUNT_SUMMARY: AccountSummary = {
   id: 'ORG_ID',
   name: 'ORG_NAME',
