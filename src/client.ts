@@ -11,9 +11,9 @@ export interface BreezeApiError {
  * Type-assertion that throws a human-readable error when the Breeze API returns
  * `{ success: false, errors: [...] }` instead of the expected payload.
  *
- * After this call TypeScript narrows `data` away from `unknown`.
+ * The generic `T` narrows the return type so callers avoid the double-cast pattern.
  */
-export function assertBreezeSuccess(data: unknown): asserts data is Record<string, unknown> {
+export function assertBreezeSuccess<T>(data: unknown): asserts data is T {
   if (
     typeof data === 'object' &&
     data !== null &&
@@ -51,7 +51,7 @@ export class BreezeHttpClient {
     if (options?.params) {
       for (const [key, value] of Object.entries(options.params)) {
         if (value !== undefined && value !== null) {
-          url.searchParams.set(key, String(value as ParamValue));
+          url.searchParams.set(key, String(value));
         }
       }
     }

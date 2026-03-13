@@ -494,8 +494,8 @@ export default class People {
     params: ApiGetParams = {},
   ): Promise<BreezePerson | BreezePersonDetail> {
     const { data } = await this.axios.get('people/' + id, { params });
-    assertBreezeSuccess(data);
-    return data as unknown as BreezePerson;
+    assertBreezeSuccess<BreezePerson>(data);
+    return data;
   }
   /** Retrieve a list of people in your Breeze database. */
   private apiList(params?: { details?: 0 } & ApiListParams): Promise<BreezePerson[]>;
@@ -506,24 +506,24 @@ export default class People {
     const { data } = await this.axios.get('people', {
       params: filter_json ? { filter_json: JSON.stringify(filter_json), ...params } : params,
     });
-    assertBreezeSuccess(data);
-    return data as unknown as BreezePerson[];
+    assertBreezeSuccess<BreezePerson[]>(data);
+    return data;
   }
   /** Update a person in your Breeze database. */
   private async apiUpdate(id: string, { fields_json }: ApiUpdateParams) {
     const { data } = await this.axios.get('people/update', {
       params: { person_id: id, fields_json: JSON.stringify(fields_json) },
     });
-    assertBreezeSuccess(data);
-    return data as unknown as BreezePerson;
+    assertBreezeSuccess<BreezePerson>(data);
+    return data;
   }
   /** Add a person to your Breeze database. */
   private async apiAdd({ first = '', last = '', fields_json = [] }: ApiAddParams = {}) {
     const { data } = await this.axios.get('people/add', {
       params: { first, last, fields_json: JSON.stringify(fields_json) },
     });
-    assertBreezeSuccess(data);
-    return data as unknown as BreezePerson;
+    assertBreezeSuccess<BreezePerson>(data);
+    return data;
   }
   /** Delete a person from your Breeze database. */
   private async apiDelete(id: string) {
@@ -537,14 +537,15 @@ export default class People {
   }): Promise<(FieldWithoutOptions | FieldWithOptions)[]>;
   private async apiProfileFields({ removeSections }: { removeSections?: boolean } = {}) {
     const { data } = await this.axios.get('profile');
-    assertBreezeSuccess(data);
-    return removeSections
-      ? (data as unknown as unknown[]).reduce(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (arr: unknown[], { fields }: any) => (fields ? [...arr, ...fields] : arr),
-          [],
-        )
-      : data;
+    assertBreezeSuccess<ProfileSection[]>(data);
+    if (removeSections) {
+      return data.reduce(
+        (arr: (FieldWithoutOptions | FieldWithOptions)[], section: ProfileSection) =>
+          section.fields ? [...arr, ...section.fields] : arr,
+        [],
+      );
+    }
+    return data;
   }
   /** These methods are meant to mirror the API as it's described in the
    * [official Breeze documentation](https://app.breezechms.com/api#people),

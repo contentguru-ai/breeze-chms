@@ -12,8 +12,8 @@ export default class Account {
    * [View docs for `account.summary()`](https://github.com/Notebird-App/breeze-chms/blob/main/docs/Account.md#accountsummary) */
   async summary() {
     const { data } = await this.api.get('account/summary');
-    assertBreezeSuccess(data);
-    return data as unknown as AccountSummary;
+    assertBreezeSuccess<AccountSummary>(data);
+    return data;
   }
 
   /** Retrieve a list of events based on search criteria.
@@ -23,8 +23,8 @@ export default class Account {
   logs(params: { details: 1 } & LogParams): Promise<AccountLogDetail[]>;
   async logs(params: ({ details?: 0 } | { details?: 1 }) & LogParams) {
     const { data } = await this.api.get('account/list_log', { params });
-    assertBreezeSuccess(data);
-    return data as unknown as AccountLog[];
+    assertBreezeSuccess<AccountLog[]>(data);
+    return data;
   }
 }
 
