@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { BreezeHttpClient, assertBreezeSuccess } from './client.js';
 
 // Helper functions, types and defaults
 const BREEZE_FILES_URL = 'https://files.breezechms.com/';
@@ -75,8 +75,8 @@ const makeDateIso = (val: string) => {
 // Class definition
 export default class People {
   /** Callable http client with url and api key initialized */
-  private axios: AxiosInstance;
-  constructor(axios: AxiosInstance) {
+  private axios: BreezeHttpClient;
+  constructor(axios: BreezeHttpClient) {
     this.axios = axios;
     // Need to bind `this` for each .api sub-method
     this.api.get = this.api.get.bind(this);
@@ -388,9 +388,9 @@ export default class People {
           let matchOption = options.find((option) => fuzzy(option.name) === fuzzyValue)?.option_id;
           // For gender, 'm' should match male and 'f' should match female too!
           if (!matchOption && predefinedKey === 'gender') {
-            const fuzzyValue = fuzzy(value.substr(0, 1));
+            const fuzzyValue = fuzzy(value.slice(0, 1));
             matchOption = options.find(
-              (option) => fuzzy(option.name.substr(0, 1)) === fuzzyValue,
+              (option) => fuzzy(option.name.slice(0, 1)) === fuzzyValue,
             )?.option_id;
           }
           if (!matchOption) continue;
@@ -489,41 +489,46 @@ export default class People {
   /** Get individual person record in your Breeze database. */
   private apiGet(id: string, params: { details: 0 }): Promise<BreezePerson>;
   private apiGet(id: string, params?: { details?: 1 }): Promise<BreezePersonDetail>;
-  private async apiGet(id: string, params: ApiGetParams = {}) {
+  private async apiGet(
+    id: string,
+    params: ApiGetParams = {},
+  ): Promise<BreezePerson | BreezePersonDetail> {
     const { data } = await this.axios.get('people/' + id, { params });
-    if (data.success === false) throw new Error(data.errors[0]);
-    return data;
+    assertBreezeSuccess(data);
+    return data as unknown as BreezePerson;
   }
   /** Retrieve a list of people in your Breeze database. */
   private apiList(params?: { details?: 0 } & ApiListParams): Promise<BreezePerson[]>;
   private apiList(params: { details: 1 } & ApiListParams): Promise<BreezePersonDetail[]>;
-  private async apiList({ filter_json, ...params }: ApiListParams = {}) {
+  private async apiList(
+    { filter_json, ...params }: ApiListParams = {},
+  ): Promise<BreezePerson[] | BreezePersonDetail[]> {
     const { data } = await this.axios.get('people', {
       params: filter_json ? { filter_json: JSON.stringify(filter_json), ...params } : params,
     });
-    if (data.success === false) throw new Error(data.errors[0]);
-    return data;
+    assertBreezeSuccess(data);
+    return data as unknown as BreezePerson[];
   }
   /** Update a person in your Breeze database. */
   private async apiUpdate(id: string, { fields_json }: ApiUpdateParams) {
     const { data } = await this.axios.get('people/update', {
       params: { person_id: id, fields_json: JSON.stringify(fields_json) },
     });
-    if (data.success === false) throw new Error(data.errors[0]);
-    return data as BreezePerson;
+    assertBreezeSuccess(data);
+    return data as unknown as BreezePerson;
   }
   /** Add a person to your Breeze database. */
   private async apiAdd({ first = '', last = '', fields_json = [] }: ApiAddParams = {}) {
     const { data } = await this.axios.get('people/add', {
       params: { first, last, fields_json: JSON.stringify(fields_json) },
     });
-    if (data.success === false) throw new Error(data.errors[0]);
-    return data as BreezePerson;
+    assertBreezeSuccess(data);
+    return data as unknown as BreezePerson;
   }
   /** Delete a person from your Breeze database. */
   private async apiDelete(id: string) {
     const { data } = await this.axios.get('people/delete', { params: { person_id: id } });
-    if (data.success === false) throw new Error(data.errors[0]);
+    assertBreezeSuccess(data);
   }
   /** Get information about user-defined profile fields in your Breeze database. */
   private apiProfileFields(params?: { removeSections?: false }): Promise<ProfileSection[]>;
@@ -532,9 +537,13 @@ export default class People {
   }): Promise<(FieldWithoutOptions | FieldWithOptions)[]>;
   private async apiProfileFields({ removeSections }: { removeSections?: boolean } = {}) {
     const { data } = await this.axios.get('profile');
-    if (data.success === false) throw new Error(data.errors[0]);
+    assertBreezeSuccess(data);
     return removeSections
-      ? (data as any[]).reduce((arr, { fields }) => (fields ? [...arr, ...fields] : arr), [])
+      ? (data as unknown as unknown[]).reduce(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (arr: unknown[], { fields }: any) => (fields ? [...arr, ...fields] : arr),
+          [],
+        )
       : data;
   }
   /** These methods are meant to mirror the API as it's described in the

@@ -1,9 +1,9 @@
-import { AxiosInstance } from 'axios';
+import { BreezeHttpClient, assertBreezeSuccess } from './client.js';
 
 export default class Account {
   /** Callable http client with url and api key initialized */
-  private api: AxiosInstance;
-  constructor(api: AxiosInstance) {
+  private api: BreezeHttpClient;
+  constructor(api: BreezeHttpClient) {
     this.api = api;
   }
 
@@ -12,8 +12,8 @@ export default class Account {
    * [View docs for `account.summary()`](https://github.com/Notebird-App/breeze-chms/blob/main/docs/Account.md#accountsummary) */
   async summary() {
     const { data } = await this.api.get('account/summary');
-    if (data.success === false) throw new Error(data.errors[0]);
-    return data as AccountSummary;
+    assertBreezeSuccess(data);
+    return data as unknown as AccountSummary;
   }
 
   /** Retrieve a list of events based on search criteria.
@@ -21,10 +21,10 @@ export default class Account {
    * [View docs for `account.logs()`](https://github.com/Notebird-App/breeze-chms/blob/main/docs/Account.md#accountlogs) */
   logs(params: { details?: 0 } & LogParams): Promise<AccountLog[]>;
   logs(params: { details: 1 } & LogParams): Promise<AccountLogDetail[]>;
-  async logs(params: LogParams) {
+  async logs(params: ({ details?: 0 } | { details?: 1 }) & LogParams) {
     const { data } = await this.api.get('account/list_log', { params });
-    if (data.success === false) throw new Error(data.errors[0]);
-    return data;
+    assertBreezeSuccess(data);
+    return data as unknown as AccountLog[];
   }
 }
 

@@ -1,12 +1,14 @@
 {
-  "extends": "@tsconfig/node18/tsconfig.json",
+  "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./build/esm",
     "forceConsistentCasingInFileNames": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "strict": true,
+    "isolatedModules": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]
